@@ -27,15 +27,10 @@ $user = $result->fetch_assoc();
     <h1>Willkommen, <?= htmlspecialchars($user['username']) ?></h1>
     <p>Email: <?= htmlspecialchars($user['email']) ?></p>
     <p>Rolle: <?= htmlspecialchars($user['role']) ?></p>
+    <a href="file_explorer.php">Dateiexplorer</a> |
+    <?php if ($user['role'] == 'admin'): ?>
+    <a href="user_management.php">Benutzerverwaltung</a> |
+    <?php endif; ?>
     <a href="logout.php">Logout</a>
-    <div class="container">
-        <h1>2D Schaltkreisplaner</h1>
-        <canvas id="canvas" width="800" height="600"></canvas>
-        <div class="tools">
-            <button id="saveBtn">Speichern</button>
-            <button id="clearBtn">Löschen</button>
-        </div>
-    </div>
-    <script src="script.js"></script>
 </body>
 </html>
