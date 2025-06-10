@@ -7,7 +7,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'admin') {
 
 require 'config.php';
 
-$project_id = $_GET['project_id'];
+$project_id = (int)$_GET['project_id'];
 $error_message = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -23,8 +23,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
-$users = $conn->query("SELECT * FROM users WHERE id NOT IN (SELECT user_id FROM project_users WHERE project_id = $project_id)");
-$project_users = $conn->query("SELECT users.id, users.username FROM users INNER JOIN project_users ON users.id = project_users.user_id WHERE project_users.project_id = $project_id");
+$stmt = $conn->prepare("SELECT * FROM users WHERE id NOT IN (SELECT user_id FROM project_users WHERE project_id = ?)");
+$stmt->bind_param("i", $project_id);
+$stmt->execute();
+$users = $stmt->get_result();
+
+$stmt = $conn->prepare("SELECT users.id, users.username FROM users INNER JOIN project_users ON users.id = project_users.user_id WHERE project_users.project_id = ?");
+$stmt->bind_param("i", $project_id);
+$stmt->execute();
+$project_users = $stmt->get_result();
 ?>
 <!DOCTYPE html>
 <html lang="en">
