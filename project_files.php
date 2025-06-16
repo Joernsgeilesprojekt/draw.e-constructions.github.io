@@ -230,6 +230,32 @@ const redoStack = [];
             <th>Dateiname</th>
             <th>Aktionen</th>
         </tr>
+        <?php while ($design = $designs_result->fetch_assoc()): ?>
+            <tr>
+                <td><?= htmlspecialchars($design['name']) ?></td>
+                <td>
+                    <a href="view_design.php?design_id=<?= $design['id'] ?>">Anzeigen</a>
+                    <a href="download_design.php?design_id=<?= $design['id'] ?>">Download</a>
+                    <a href="edit_design.php?design_id=<?= $design['id'] ?>&project_id=<?= $project_id ?>">Bearbeiten</a>
+                    <?php if ($_SESSION['role'] == 'admin' || $_SESSION['role'] == 'owner' || $_SESSION['role'] == 'project_admin'): ?>
+                        <a href="delete_design.php?design_id=<?= $design['id'] ?>&project_id=<?= $project_id ?>">Löschen</a>
+                    <?php endif; ?>
+                </td>
+            </tr>
+        <?php endwhile; ?>
+    </table>
+    <a href="download_project_designs.php?project_id=<?= $project_id ?>">Alle Schaltpläne als ZIP herunterladen</a>
+    <a href="file_explorer.php">Zurück zum Dateiexplorer</a>
+    <a href="edit_project.php?project_id=<?= $project_id ?>">Schaltplan erstellen/bearbeiten</a>
+
+    <!-- Toolbox for Circuit Components -->
+    <div class="toolbox">
+        <button id="lineTool">Power Line</button>
+        <button id="switchTool">Switch</button>
+        <button id="lampTool">Lamp</button>
+        <button id="andGateTool">AND Gate</button>
+        <button id="powerSourceTool">Power Source</button>
+
  main
         <?php while ($design = $designs_result->fetch_assoc()): ?>
             <tr>
@@ -1113,6 +1139,109 @@ function mouseMoveHandler(e) {
         saveComponents();
         drawComponents();
     }
+
+    // Run circuit simulation using a simple graph search
+    document.getElementById('runSimulation').addEventListener('click', () => {
+        const powerSource = components.find(comp => comp.type === 'powerSource');
+        const lamp = components.find(comp => comp.type === 'lamp');
+        if (!powerSource || !lamp) {
+            alert('Power source or lamp missing.');
+            return;
+        }
+
+        const graph = {};
+        const addEdge = (a, b) => {
+            const k1 = `${a.x},${a.y}`;
+            const k2 = `${b.x},${b.y}`;
+            graph[k1] = graph[k1] || [];
+            graph[k2] = graph[k2] || [];
+            graph[k1].push(k2);
+            graph[k2].push(k1);
+        };
+
+        components.forEach(comp => {
+            if (comp.type === 'line') {
+                addEdge({x: comp.x, y: comp.y}, {x: comp.endX, y: comp.endY});
+            } else if (comp.type === 'switch' && comp.state) {
+                addEdge({x: comp.x - 20, y: comp.y}, {x: comp.x + 20, y: comp.y});
+            } else if (comp.type === 'andGate') {
+                addEdge({x: comp.x - 30, y: comp.y}, {x: comp.x + 30, y: comp.y});
+            }
+        });
+
+        const start = {x: powerSource.x - 25, y: powerSource.y};
+        const goal = {x: lamp.x - 20, y: lamp.y};
+        const queue = [`${start.x},${start.y}`];
+        const visited = new Set(queue);
+        let found = false;
+
+        while (queue.length > 0) {
+            const node = queue.shift();
+            if (node === `${goal.x},${goal.y}`) {
+                found = true;
+                break;
+            }
+            (graph[node] || []).forEach(next => {
+                if (!visited.has(next)) {
+                    visited.add(next);
+                    queue.push(next);
+                }
+            });
+        }
+
+        lamp.on = found;
+        drawComponents();
+        alert(lamp.on ? 'Circuit is working!' : 'Incomplete circuit. Check connections.');
+    });
+
+    document.getElementById('undoBtn').addEventListener('click', () => {
+        if (undoStack.length > 0) {
+            redoStack.push(JSON.stringify(components));
+            const state = undoStack.pop();
+            restoreState(state);
+            drawComponents();
+            saveComponents();
+        }
+    });
+
+    document.getElementById('redoBtn').addEventListener('click', () => {
+        if (redoStack.length > 0) {
+            undoStack.push(JSON.stringify(components));
+            const state = redoStack.pop();
+            restoreState(state);
+            drawComponents();
+            saveComponents();
+        }
+    });
+
+    document.getElementById('exportJson').addEventListener('click', () => {
+        const blob = new Blob([JSON.stringify(components)], {type: 'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'circuit.json';
+        a.click();
+        URL.revokeObjectURL(url);
+    });
+
+    document.getElementById('importJson').addEventListener('click', () => {
+        document.getElementById('importFile').click();
+    });
+
+    document.getElementById('importFile').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+            saveState();
+            restoreState(reader.result);
+            drawComponents();
+            saveComponents();
+        };
+        reader.readAsText(file);
+    });
+
+    // Initial draw of the grid and components
 
     // Run circuit simulation using a simple graph search
     document.getElementById('runSimulation').addEventListener('click', () => {
