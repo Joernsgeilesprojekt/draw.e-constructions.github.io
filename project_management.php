@@ -2,6 +2,10 @@
 session_start();
 require 'csrf.php';
 csrf_verify();
+
+session_start();
+require 'csrf.php';
+csrf_verify();
 if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
     exit;
@@ -39,6 +43,12 @@ $projects = $conn->query("SELECT * FROM projects");
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Projektverwaltung</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="styles.css">
+
 
 <?php
 session_start();
@@ -110,6 +120,13 @@ $projects = $conn->query("SELECT * FROM projects");
 <?php if ($error_message): ?>
     <p><?= htmlspecialchars($error_message) ?></p>
 <?php endif; ?>
+<form method="POST" action="project_management.php">
+    <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
+    <input type="text" name="name" placeholder="Projektname" required>
+    <textarea name="description" placeholder="Projektbeschreibung" required></textarea>
+    <button type="submit">Projekt hinzufügen</button>
+</form>
+
  main
 <form method="POST" action="project_management.php">
     <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
