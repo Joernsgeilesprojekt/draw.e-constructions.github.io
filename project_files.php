@@ -78,6 +78,7 @@ try {
             </tr>
         <?php endwhile; ?>
     </table>
+    <a href="download_project_designs.php?project_id=<?= $project_id ?>">Alle Schaltpläne als ZIP herunterladen</a>
     <a href="file_explorer.php">Zurück zum Dateiexplorer</a>
     <a href="edit_project.php?project_id=<?= $project_id ?>">Schaltplan erstellen/bearbeiten</a>
 
@@ -415,18 +416,58 @@ try {
         drawComponents();
     }
 
-    // Run circuit simulation
+    // Run circuit simulation using a simple graph search
     document.getElementById('runSimulation').addEventListener('click', () => {
-        // Basic simulation logic
         const powerSource = components.find(comp => comp.type === 'powerSource');
         const lamp = components.find(comp => comp.type === 'lamp');
-        if (powerSource && lamp) {
-            // Simplified: Check if there's a path between power source and lamp
-            const connected = components.some(comp => comp.type === 'line' && comp.x === powerSource.x && comp.endX === lamp.x);
-            lamp.on = connected;
+        if (!powerSource || !lamp) {
+            alert('Power source or lamp missing.');
+            return;
         }
+
+        const graph = {};
+        const addEdge = (a, b) => {
+            const k1 = `${a.x},${a.y}`;
+            const k2 = `${b.x},${b.y}`;
+            graph[k1] = graph[k1] || [];
+            graph[k2] = graph[k2] || [];
+            graph[k1].push(k2);
+            graph[k2].push(k1);
+        };
+
+        components.forEach(comp => {
+            if (comp.type === 'line') {
+                addEdge({x: comp.x, y: comp.y}, {x: comp.endX, y: comp.endY});
+            } else if (comp.type === 'switch' && comp.state) {
+                addEdge({x: comp.x - 20, y: comp.y}, {x: comp.x + 20, y: comp.y});
+            } else if (comp.type === 'andGate') {
+                addEdge({x: comp.x - 30, y: comp.y}, {x: comp.x + 30, y: comp.y});
+            }
+        });
+
+        const start = {x: powerSource.x - 25, y: powerSource.y};
+        const goal = {x: lamp.x - 20, y: lamp.y};
+        const queue = [`${start.x},${start.y}`];
+        const visited = new Set(queue);
+        let found = false;
+
+        while (queue.length > 0) {
+            const node = queue.shift();
+            if (node === `${goal.x},${goal.y}`) {
+                found = true;
+                break;
+            }
+            (graph[node] || []).forEach(next => {
+                if (!visited.has(next)) {
+                    visited.add(next);
+                    queue.push(next);
+                }
+            });
+        }
+
+        lamp.on = found;
         drawComponents();
-        alert(lamp && lamp.on ? 'Circuit is working!' : 'Incomplete circuit. Check connections.');
+        alert(lamp.on ? 'Circuit is working!' : 'Incomplete circuit. Check connections.');
     });
 
     document.getElementById('undoBtn').addEventListener('click', () => {
