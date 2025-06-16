@@ -36,38 +36,13 @@ $image_data = base64_encode($image_data);
     </script>
     <script src="canvas.js"></script>
     <script>
-        window.onload = function() {
+        window.addEventListener('DOMContentLoaded', () => {
             const canvas = document.getElementById('circuitCanvas');
             const ctx = canvas.getContext('2d');
-            let drawing = false;
-
             const img = new Image();
             img.src = image_data;
-            img.onload = function() {
-                ctx.drawImage(img, 0, 0);
-            }
-
-            canvas.addEventListener('mousedown', function(e) {
-                drawing = true;
-                ctx.beginPath();
-                ctx.moveTo(e.offsetX, e.offsetY);
-            });
-
-            canvas.addEventListener('mousemove', function(e) {
-                if (drawing) {
-                    ctx.lineTo(e.offsetX, e.offsetY);
-                    ctx.stroke();
-                }
-            });
-
-            canvas.addEventListener('mouseup', function() {
-                drawing = false;
-            });
-
-            canvas.addEventListener('mouseout', function() {
-                drawing = false;
-            });
-        }
+            img.onload = () => ctx.drawImage(img, 0, 0);
+        });
 
         function saveCanvas() {
             const canvas = document.getElementById('circuitCanvas');
@@ -93,6 +68,11 @@ $image_data = base64_encode($image_data);
 <?php include 'header.php'; ?>
 <div class="container">
     <h1>Schaltplan bearbeiten: <?= htmlspecialchars($name) ?></h1>
+    <div class="draw-controls">
+        <label>Farbe: <input type="color" id="colorPicker" value="#000000"></label>
+        <label>Linienbreite: <input type="number" id="lineWidth" value="2" min="1" max="10"></label>
+        <button id="clearCanvas">Canvas löschen</button>
+    </div>
     <canvas id="circuitCanvas" width="800" height="600"></canvas>
     <br>
     <button onclick="saveCanvas()">Schaltplan speichern</button>

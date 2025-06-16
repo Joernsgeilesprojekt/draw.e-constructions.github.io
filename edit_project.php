@@ -89,6 +89,11 @@ $files = array_diff(scandir($directory), array('..', '.'));
         <?php endwhile; ?>
     </table>
     <h2>Schaltplan erstellen/bearbeiten</h2>
+    <div class="draw-controls">
+        <label>Farbe: <input type="color" id="colorPicker" value="#000000"></label>
+        <label>Linienbreite: <input type="number" id="lineWidth" value="2" min="1" max="10"></label>
+        <button id="clearCanvas">Canvas löschen</button>
+    </div>
     <canvas id="circuitCanvas" width="800" height="600"></canvas>
     <br>
     <button onclick="saveCanvas()">Schaltplan speichern</button>
