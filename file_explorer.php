@@ -12,7 +12,10 @@ if (!is_dir($directory)) {
     mkdir($directory, 0777, true);
 }
 
-$projects = $conn->query("SELECT projects.id, projects.name FROM projects INNER JOIN project_users ON projects.id = project_users.project_id WHERE project_users.user_id = {$_SESSION['user_id']}");
+$stmt = $conn->prepare("SELECT projects.id, projects.name FROM projects INNER JOIN project_users ON projects.id = project_users.project_id WHERE project_users.user_id = ?");
+$stmt->bind_param("i", $_SESSION['user_id']);
+$stmt->execute();
+$projects = $stmt->get_result();
 $message = isset($_GET['message']) ? $_GET['message'] : '';
 ?>
 <!DOCTYPE html>

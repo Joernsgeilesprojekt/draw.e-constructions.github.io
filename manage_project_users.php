@@ -1,5 +1,7 @@
 <?php
 session_start();
+require 'csrf.php';
+csrf_verify();
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'admin') {
     header('Location: login.php');
     exit;
@@ -24,8 +26,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
-$users = $conn->query("SELECT * FROM users WHERE id NOT IN (SELECT user_id FROM project_users WHERE project_id = $project_id)");
-$project_users = $conn->query("SELECT users.id, users.username, project_users.role FROM users INNER JOIN project_users ON users.id = project_users.user_id WHERE project_users.project_id = $project_id");
+$users_stmt = $conn->prepare("SELECT * FROM users WHERE id NOT IN (SELECT user_id FROM project_users WHERE project_id = ?)");
+$users_stmt->bind_param("i", $project_id);
+$users_stmt->execute();
+$users = $users_stmt->get_result();
+
+$project_users_stmt = $conn->prepare("SELECT users.id, users.username, project_users.role FROM users INNER JOIN project_users ON users.id = project_users.user_id WHERE project_users.project_id = ?");
+$project_users_stmt->bind_param("i", $project_id);
+$project_users_stmt->execute();
+$project_users = $project_users_stmt->get_result();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -42,6 +51,7 @@ $project_users = $conn->query("SELECT users.id, users.username, project_users.ro
     <p><?= htmlspecialchars($error_message) ?></p>
 <?php endif; ?>
 <form method="POST" action="manage_project_users.php?project_id=<?= $project_id ?>">
+    <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
     <select name="user_id">
         <?php while ($user = $users->fetch_assoc()): ?>
             <option value="<?= $user['id'] ?>"><?= htmlspecialchars($user['username']) ?></option>
