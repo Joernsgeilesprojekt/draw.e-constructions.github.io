@@ -16,5 +16,15 @@
         <p>Bitte melden Sie sich an, um fortzufahren.</p>
         <a href="login.php">Login</a> | <a href="register.php">Registrieren</a>
     </div>
+    <div class="texthead">
+        <a href="impressum.php">Impressum</a> |
+        <a href="datenschutz.php">Datenschutz</a>
+    </div>
+    <script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('service-worker.js').catch(() => {});
+    }
+    </script>
+    <script src="cookie.js"></script>
 </body>
 </html>

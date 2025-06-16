@@ -67,6 +67,7 @@ try {
                     <a href="view_design.php?design_id=<?= $design['id'] ?>">Anzeigen</a>
                     <a href="download_design.php?design_id=<?= $design['id'] ?>">Download</a>
                     <a href="edit_design.php?design_id=<?= $design['id'] ?>&project_id=<?= $project_id ?>">Bearbeiten</a>
+                    <a href="design_history.php?design_id=<?= $design['id'] ?>">Versionen</a>
                     <?php if ($_SESSION['role'] == 'admin' || $_SESSION['role'] == 'owner' || $_SESSION['role'] == 'project_admin'): ?>
                         <a href="delete_design.php?design_id=<?= $design['id'] ?>&project_id=<?= $project_id ?>">Löschen</a>
                     <?php endif; ?>

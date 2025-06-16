@@ -15,4 +15,12 @@ if (session_status() === PHP_SESSION_NONE) {
 document.getElementById('themeToggle').addEventListener('click', () => {
     document.body.classList.toggle('dark');
 });
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js').catch(() => {});
+}
 </script>
+<script src="cookie.js"></script>
+<div class="texthead">
+    <a href="impressum.php">Impressum</a> |
+    <a href="datenschutz.php">Datenschutz</a>
+</div>

@@ -25,15 +25,8 @@ $image_data = base64_encode($image_data);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Schaltplan bearbeiten: <?= htmlspecialchars($name) ?></title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-    <link rel="manifest" href="manifest.json">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="manifest" href="manifest.json">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-    <link rel="manifest" href="manifest.json">
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="styles.css">
     <script>
@@ -97,11 +90,13 @@ $image_data = base64_encode($image_data);
     </script>
 </head>
 <body>
+<?php include 'header.php'; ?>
 <div class="container">
     <h1>Schaltplan bearbeiten: <?= htmlspecialchars($name) ?></h1>
     <canvas id="circuitCanvas" width="800" height="600"></canvas>
     <br>
     <button onclick="saveCanvas()">Schaltplan speichern</button>
+    <a href="design_history.php?design_id=<?= $design_id ?>">Versionsverlauf</a>
     <a href="project_files.php?project_id=<?= $_GET['project_id'] ?>">Zurück zu den Projektdateien</a>
 </div>
 </body>

@@ -31,3 +31,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <input type="password" name="password" placeholder="Password" required>
     <button type="submit">Login</button>
 </form>
+<div class="texthead">
+    <a href="impressum.php">Impressum</a> |
+    <a href="datenschutz.php">Datenschutz</a>
+</div>
+<script>
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js').catch(() => {});
+}
+</script>
+<script src="cookie.js"></script>
