@@ -1,47 +1,57 @@
+:root {
+    --bg: #f0f0f0;
+    --fg: #333;
+    --header-bg: #333;
+    --header-fg: #fff;
+    --container-bg: #fff;
+    font-family: 'Inter', Arial, sans-serif;
+}
 body {
-    font-family: Arial, sans-serif;
-    background-color: #f0f0f0;
+    background-color: var(--bg);
+    color: var(--fg);
     margin: 0;
     padding: 0;
-    height: 100vh;
+    min-height: 100vh;
+}
+body.dark {
+    --bg: #1e1e1e;
+    --fg: #e0e0e0;
+    --header-bg: #222;
+    --header-fg: #e0e0e0;
+    --container-bg: #333;
 }
 
 .container {
     align-items: center;
     justify-self: center;
-    height: fit-content;
     width: 80%;
     max-width: 1200px;
-    background: #fff;
+    background: var(--container-bg);
     padding: 20px;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
     border-radius: 8px;
+    margin: auto;
 }
 .texthead{
     display: flex;
     justify-content: flex-end;
-    height:
 }
+
 h1, h2 {
-    color: #333;
+    color: var(--fg);
 }
+
 .header {
-    top: 0px;
+    top: 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #333;
+    background-color: var(--header-bg);
     padding: 10px 20px;
-    color: white;
+    color: var(--header-fg);
     font-size: 24px;
     font-weight: bold;
     text-transform: uppercase;
-    height: 20%;
-}
-
-.header .logo {
-    display: flex;
-    align-items: center;
 }
 
 .header img {
@@ -53,38 +63,18 @@ h1, h2 {
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-    .header {
-        flex-direction: column;
-        height: auto;
-        padding: 15px;
-        text-align: center;
-    }
-
-    .header img {
-        width: 30px;
-        height: 30px;
-    }
-
-    .header div {
-        margin-bottom: 10px;
-    }
+    .header { flex-direction: column; text-align: center; }
+    .header img { width:30px; height:30px; }
 }
-
 @media (max-width: 480px) {
-    .header {
-        font-size: 18px;
-    }
-
-    .header img {
-        width: 25px;
-        height: 25px;
-    }
+    .header { font-size: 18px; }
+    .header img { width:25px; height:25px; }
 }
+
 form, table {
     width: 100%;
     margin-bottom: 20px;
 }
-
 input[type="text"],
 input[type="email"],
 input[type="password"],
@@ -97,51 +87,15 @@ button {
     border: 1px solid #ccc;
     border-radius: 4px;
 }
+button { background-color: #4CAF50; color: white; border:none; cursor:pointer; }
+button:hover { background-color: #45a049; }
 
-button {
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    cursor: pointer;
-}
+table { border-collapse: collapse; width: 100%; }
+table th, table td { border:1px solid #ddd; padding:8px; text-align:left; }
+table th { background-color:#4CAF50; color:white; }
 
-button:hover {
-    background-color: #45a049;
-}
-
-table {
-    border-collapse: collapse;
-    width: 100%;
-}
-
-table th, table td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
-}
-
-table th {
-    background-color: #4CAF50;
-    color: white;
-}
-
-canvas {
-    border: 1px solid #000;
-    margin-top: 20px;
-}
-.Addprodejekt{
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-top: 20px;
-    position:absolute;
-    bottom: 0;
-    width: 100%;
-    height: 100px;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    cursor: pointer;
-    border-radius: 4px;
-    left: 0px;
-}
+canvas { border:1px solid #000; margin-top:20px; }
+.project-layout { display:flex; flex-wrap:wrap; gap:20px; }
+.files-section { flex:1 1 250px; }
+.draw-section { flex:2 1 500px; position:relative; }
+.Addprodejekt{ display:flex; justify-content:center; align-items:center; margin-top:20px; position:absolute; bottom:0; width:100%; height:100px; background-color:#4CAF50; color:white; border:none; cursor:pointer; border-radius:4px; left:0; }
