@@ -14,5 +14,5 @@ $stmt = $conn->prepare("DELETE FROM designs WHERE id = ?");
 $stmt->bind_param("i", $design_id);
 $stmt->execute();
 
-header('Location: edit_project.php?project_id=' . $project_id);
+header('Location: project_files.php?project_id=' . $project_id);
 ?>

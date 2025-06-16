@@ -24,6 +24,17 @@ $image_data = base64_encode($image_data);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Schaltplan bearbeiten: <?= htmlspecialchars($name) ?></title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="manifest" href="manifest.json">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="manifest" href="manifest.json">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="manifest" href="manifest.json">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="styles.css">
     <script>
         const project_id = <?= $_GET['project_id'] ?>;
@@ -76,7 +87,7 @@ $image_data = base64_encode($image_data);
             xhr.onload = function() {
                 if (xhr.status === 200) {
                     alert('Schaltplan gespeichert!');
-                    location.href = 'edit_project.php?project_id=' + project_id;  // Zurück zur Projektseite
+                    location.href = 'project_files.php?project_id=' + project_id;  // Zurück zur Projektseite
                 } else {
                     alert('Fehler beim Speichern des Schaltplans.');
                 }
@@ -91,7 +102,7 @@ $image_data = base64_encode($image_data);
     <canvas id="circuitCanvas" width="800" height="600"></canvas>
     <br>
     <button onclick="saveCanvas()">Schaltplan speichern</button>
-    <a href="edit_project.php?project_id=<?= $_GET['project_id'] ?>">Zurück zu den Projektdateien</a>
+    <a href="project_files.php?project_id=<?= $_GET['project_id'] ?>">Zurück zu den Projektdateien</a>
 </div>
 </body>
 </html>

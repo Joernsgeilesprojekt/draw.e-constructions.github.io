@@ -40,5 +40,5 @@ if (isset($_POST["submit"])) {
         }
     }
 }
-header('Location: edit_project.php?project_id=' . $project_id . '&message=' . urlencode($error_message));
+header('Location: project_files.php?project_id=' . $project_id . '&message=' . urlencode($error_message));
 ?>
