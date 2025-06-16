@@ -1,5 +1,7 @@
 <?php
 session_start();
+require 'csrf.php';
+csrf_verify();
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'admin') {
     header('Location: login.php');
     exit;
@@ -43,6 +45,17 @@ $result = $conn->query("SELECT * FROM users");
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Benutzerverwaltung</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="manifest" href="manifest.json">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="manifest" href="manifest.json">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="manifest" href="manifest.json">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -52,6 +65,7 @@ $result = $conn->query("SELECT * FROM users");
     <p><?= htmlspecialchars($error_message) ?></p>
 <?php endif; ?>
 <form method="POST" action="user_management.php">
+    <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
     <input type="text" name="username" placeholder="Benutzername" required>
     <input type="email" name="email" placeholder="Email" required>
     <input type="password" name="password" placeholder="Passwort" required>
