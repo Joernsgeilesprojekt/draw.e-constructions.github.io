@@ -1,5 +1,7 @@
 <?php
 session_start();
+require 'csrf.php';
+csrf_verify();
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'admin') {
     header('Location: login.php');
     exit;
@@ -52,6 +54,7 @@ $result = $conn->query("SELECT * FROM users");
     <p><?= htmlspecialchars($error_message) ?></p>
 <?php endif; ?>
 <form method="POST" action="user_management.php">
+    <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
     <input type="text" name="username" placeholder="Benutzername" required>
     <input type="email" name="email" placeholder="Email" required>
     <input type="password" name="password" placeholder="Passwort" required>

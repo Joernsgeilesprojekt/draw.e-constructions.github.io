@@ -1,5 +1,7 @@
 <?php
 session_start();
+require 'csrf.php';
+csrf_verify();
 if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
     exit;
@@ -46,6 +48,7 @@ $projects = $conn->query("SELECT * FROM projects");
     <p><?= htmlspecialchars($error_message) ?></p>
 <?php endif; ?>
 <form method="POST" action="project_management.php">
+    <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
     <input type="text" name="name" placeholder="Projektname" required>
     <textarea name="description" placeholder="Projektbeschreibung" required></textarea>
     <button type="submit">Projekt hinzufügen</button>

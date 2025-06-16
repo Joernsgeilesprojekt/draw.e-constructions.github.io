@@ -95,6 +95,11 @@ try {
 
     <!-- Run Simulation Button -->
     <button class="run-simulation" id="runSimulation">Run Simulation</button>
+    <button id="undoBtn">Undo</button>
+    <button id="redoBtn">Redo</button>
+    <button id="exportJson">Export JSON</button>
+    <button id="importJson">Import JSON</button>
+    <input type="file" id="importFile" style="display:none" accept="application/json">
 </div>
 
 <script>
@@ -103,6 +108,29 @@ try {
     let drawingMode = 'select';
     let currentTool = 'select';
     const components = [];
+    const undoStack = [];
+    const redoStack = [];
+
+    function saveState() {
+        undoStack.push(JSON.stringify(components));
+        if (undoStack.length > 50) undoStack.shift();
+        redoStack.length = 0;
+    }
+
+    function restoreState(state) {
+        components.length = 0;
+        JSON.parse(state).forEach(saved => {
+            let component;
+            switch (saved.type) {
+                case 'line': component = new Line(saved.x, saved.y, saved.endX, saved.endY); break;
+                case 'switch': component = new Switch(saved.x, saved.y, saved.state); break;
+                case 'lamp': component = new Lamp(saved.x, saved.y, saved.on); break;
+                case 'andGate': component = new ANDGate(saved.x, saved.y); break;
+                case 'powerSource': component = new PowerSource(saved.x, saved.y); break;
+            }
+            components.push(component);
+        });
+    }
 
     // ... rest of the JavaScript code remains the same, with the above changes applied
 
@@ -160,42 +188,6 @@ try {
             ctx.beginPath();
             ctx.moveTo(this.x, this.y);
             ctx.lineTo(this.endX, this.endY);
-            ctx.stroke();
-        }
-
-        setEnd(x, y) {
-            if (Math.abs(this.x - x) < Math.abs(this.y - y)) {
-                this.endX = this.x; // vertical line
-                this.endY = y;
-            } else {
-                this.endX = x; // horizontal line
-                this.endY = this.y;
-            }
-        }
-
-        isClicked(x, y) {
-            // Check if click is near the line for erasing
-            return Math.abs(this.x - x) < 10 && Math.abs(this.y - y) < 10 || Math.abs(this.endX - x) < 10 && Math.abs(this.endY - y) < 10;
-        }
-    }
-
-    class Switch {
-        constructor(x, y, state = false) {
-            this.x = x;
-            this.y = y;
-            this.type = 'switch';
-            this.state = state;
-        }
-
-        draw() {
-            ctx.fillStyle = this.state ? 'green' : 'red';
-            ctx.fillRect(this.x - 10, this.y - 10, 20, 20);
-            ctx.strokeText('SW', this.x - 15, this.y - 20);
-            ctx.strokeStyle = 'black';
-            // Draw connection points
-            ctx.beginPath();
-            ctx.arc(this.x - 20, this.y, 5, 0, Math.PI * 2); // input
-            ctx.arc(this.x + 20, this.y, 5, 0, Math.PI * 2); // output
             ctx.stroke();
         }
 
@@ -335,6 +327,7 @@ try {
         if (currentTool === 'eraser') {
             const index = components.findIndex(comp => comp.isClicked(x, y));
             if (index > -1) {
+                saveState();
                 components.splice(index, 1);
                 saveComponents();
                 drawComponents();
@@ -365,6 +358,7 @@ try {
                 // Toggle switch if clicked on
                 const clickedSwitch = components.find(comp => comp.type === 'switch' && comp.isClicked(x, y));
                 if (clickedSwitch) {
+                    saveState();
                     clickedSwitch.toggle();
                     drawComponents();
                     saveComponents();
@@ -376,6 +370,7 @@ try {
         if (component) {
             // Snap component to nearest connection point if possible
             snapToClosestConnection(component);
+            saveState();
             components.push(component);
             saveComponents();
             drawComponents();
@@ -432,6 +427,53 @@ try {
         }
         drawComponents();
         alert(lamp && lamp.on ? 'Circuit is working!' : 'Incomplete circuit. Check connections.');
+    });
+
+    document.getElementById('undoBtn').addEventListener('click', () => {
+        if (undoStack.length > 0) {
+            redoStack.push(JSON.stringify(components));
+            const state = undoStack.pop();
+            restoreState(state);
+            drawComponents();
+            saveComponents();
+        }
+    });
+
+    document.getElementById('redoBtn').addEventListener('click', () => {
+        if (redoStack.length > 0) {
+            undoStack.push(JSON.stringify(components));
+            const state = redoStack.pop();
+            restoreState(state);
+            drawComponents();
+            saveComponents();
+        }
+    });
+
+    document.getElementById('exportJson').addEventListener('click', () => {
+        const blob = new Blob([JSON.stringify(components)], {type: 'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'circuit.json';
+        a.click();
+        URL.revokeObjectURL(url);
+    });
+
+    document.getElementById('importJson').addEventListener('click', () => {
+        document.getElementById('importFile').click();
+    });
+
+    document.getElementById('importFile').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+            saveState();
+            restoreState(reader.result);
+            drawComponents();
+            saveComponents();
+        };
+        reader.readAsText(file);
     });
 
     // Initial draw of the grid and components
