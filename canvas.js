@@ -29,14 +29,14 @@ function saveCanvas() {
     const canvas = document.getElementById('circuitCanvas');
     const dataURL = canvas.toDataURL('image/png');
 
-    // AJAX request to save image data
+    
     const xhr = new XMLHttpRequest();
     xhr.open('POST', 'save_design.php', true);
     xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
     xhr.onload = function() {
         if (xhr.status === 200) {
             alert('Schaltplan gespeichert!');
-            location.reload();  // Seite neu laden, um die gespeicherten Designs anzuzeigen
+            location.reload();  
         } else {
             alert('Fehler beim Speichern des Schaltplans.');
         }

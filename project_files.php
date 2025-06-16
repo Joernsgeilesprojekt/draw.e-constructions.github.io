@@ -138,19 +138,19 @@ try {
             </div>
             <canvas id="circuitCanvas" width="1000" height="800"></canvas>
             <div id="coordinates"></div>
-            <button class="run-simulation" id="runSimulation">Simulation</button>
-            <button id="undoBtn">Undo</button>
-            <button id="redoBtn">Redo</button>
-            <button id="exportJson">Export JSON</button>
-            <button id="importJson">Import JSON</button>
-            <input type="file" id="importFile" style="display:none" accept="application/json">
-        </div>
-    </div>
-</div>
-
-<script>
-    const canvas = document.getElementById('circuitCanvas');
-    const ctx = canvas.getContext('2d');
+    
+    
+    
+    
+    
+                this.endX = this.x; 
+                this.endX = x; 
+            
+            
+            ctx.arc(this.x - 20, this.y, 5, 0, Math.PI * 2); 
+            ctx.arc(this.x + 20, this.y, 5, 0, Math.PI * 2); 
+            
+            ctx.arc(this.x - 20, this.y, 5, 0, Math.PI * 2); 
     let drawingMode = 'select';
     let currentTool = 'select';
     let freehandPath = [];
@@ -352,32 +352,32 @@ const redoStack = [];
                     component = new Freehand(saved.points, saved.color, saved.width);
                     break;
                 case 'switch':
-                    component = new Switch(saved.x, saved.y, saved.state);
-                    break;
-                case 'lamp':
-                    component = new Lamp(saved.x, saved.y, saved.on);
-                    break;
-                case 'andGate':
-                    component = new ANDGate(saved.x, saved.y);
-                    break;
-                case 'powerSource':
-                    component = new PowerSource(saved.x, saved.y);
-                    break;
-            }
-            components.push(component);
+            
+            ctx.arc(this.x - 30, this.y, 5, 0, Math.PI * 2); 
+            ctx.arc(this.x - 30, this.y + 20, 5, 0, Math.PI * 2); 
+            ctx.arc(this.x + 30, this.y, 5, 0, Math.PI * 2); 
+            
+            ctx.arc(this.x - 25, this.y, 5, 0, Math.PI * 2); 
+            ctx.arc(this.x + 25, this.y, 5, 0, Math.PI * 2); 
+    
+        
+                
+            
+    
+                
         });
     }
-    let savedComponents = JSON.parse(localStorage.getItem('components')) || [];
-    savedComponents.forEach(saved => {
-        let component;
-        switch (saved.type) {
-            case 'line':
-                component = new Line(saved.x, saved.y, saved.endX, saved.endY, saved.color, saved.width);
-                break;
-            case 'circle':
-                component = new Circle(saved.x, saved.y, saved.radius, saved.color, saved.width);
-                break;
-            case 'freehand':
+    
+    
+        const lastComponent = components[components.length - 1];
+        if (lastComponent && lastComponent.type === 'line') {
+            const x = Math.round(e.offsetX / 40) * 40;
+            const y = Math.round(e.offsetY / 40) * 40;
+            lastComponent.setEnd(x, y);
+            snapToClosestConnection(lastComponent);
+            drawComponents();
+        }
+    
                 component = new Freehand(saved.points, saved.color, saved.width);
                 break;
             case 'switch':
@@ -624,7 +624,7 @@ const redoStack = [];
             this.color = color;
             this.width = width;
             this.type = 'circle';
-        }
+    
 
         draw() {
             ctx.strokeStyle = this.color;
