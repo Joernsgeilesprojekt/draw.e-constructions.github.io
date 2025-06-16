@@ -18,5 +18,5 @@ if (file_exists($file_path)) {
     $message = "Datei nicht gefunden.";
 }
 
-header('Location: edit_project.php?project_id=' . $project_id . '&message=' . urlencode($message));
+header('Location: project_files.php?project_id=' . $project_id . '&message=' . urlencode($message));
 ?>

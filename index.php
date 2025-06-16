@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home Page</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -12,5 +16,15 @@
         <p>Bitte melden Sie sich an, um fortzufahren.</p>
         <a href="login.php">Login</a> | <a href="register.php">Registrieren</a>
     </div>
+    <div class="texthead">
+        <a href="impressum.php">Impressum</a> |
+        <a href="datenschutz.php">Datenschutz</a>
+    </div>
+    <script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('service-worker.js').catch(() => {});
+    }
+    </script>
+    <script src="cookie.js"></script>
 </body>
 </html>

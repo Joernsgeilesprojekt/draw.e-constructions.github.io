@@ -25,25 +25,21 @@ try {
     exit;
 }
 ?>
-
-<!-- HTML code remains the same -->
-?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Projektdateien</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="tools.css">
 </head>
 <body>
-<div class="header">
-    <div class="logo">Logo</div>
-    <div>
-        <?= htmlspecialchars($_SESSION['username']) ?>
-        <img src="img/user.png" alt="User Icon">
-    </div>
-</div>
+<?php include 'header.php'; ?>
 
 <div class="container">
     <h1>Projektdateien</h1>
@@ -71,6 +67,7 @@ try {
                     <a href="view_design.php?design_id=<?= $design['id'] ?>">Anzeigen</a>
                     <a href="download_design.php?design_id=<?= $design['id'] ?>">Download</a>
                     <a href="edit_design.php?design_id=<?= $design['id'] ?>&project_id=<?= $project_id ?>">Bearbeiten</a>
+                    <a href="design_history.php?design_id=<?= $design['id'] ?>">Versionen</a>
                     <?php if ($_SESSION['role'] == 'admin' || $_SESSION['role'] == 'owner' || $_SESSION['role'] == 'project_admin'): ?>
                         <a href="delete_design.php?design_id=<?= $design['id'] ?>&project_id=<?= $project_id ?>">Löschen</a>
                     <?php endif; ?>
@@ -78,23 +75,33 @@ try {
             </tr>
         <?php endwhile; ?>
     </table>
-    <a href="file_explorer.php">Zurück zum Dateiexplorer</a>
-    <a href="edit_project.php?project_id=<?= $project_id ?>">Schaltplan erstellen/bearbeiten</a>
-
-    <!-- Toolbox for Circuit Components -->
-    <div class="toolbox">
-        <button id="lineTool">Power Line</button>
-        <button id="switchTool">Switch</button>
-        <button id="lampTool">Lamp</button>
-        <button id="andGateTool">AND Gate</button>
-        <button id="powerSourceTool">Power Source</button>
+    <div class="project-layout">
+        <div class="files-section">
+            <a href="download_project_designs.php?project_id=<?= $project_id ?>">Alle Schaltpläne als ZIP herunterladen</a>
+            <a href="file_explorer.php">Zurück zum Dateiexplorer</a>
+        </div>
+        <div class="draw-section">
+            <div class="toolbox">
+                <button id="lineTool">Leitung</button>
+                <button id="circleTool">Kreis</button>
+                <button id="freehandTool">Freihand</button>
+                <button id="switchTool">Schalter</button>
+                <button id="lampTool">Lampe</button>
+                <button id="andGateTool">AND-Gatter</button>
+                <button id="powerSourceTool">Spannungsquelle</button>
+                <input type="color" id="lineColor" value="#000000">
+                <input type="number" id="lineWidth" value="2" min="1" max="10">
+            </div>
+            <canvas id="circuitCanvas" width="1000" height="800"></canvas>
+            <div id="coordinates"></div>
+            <button class="run-simulation" id="runSimulation">Simulation</button>
+            <button id="undoBtn">Undo</button>
+            <button id="redoBtn">Redo</button>
+            <button id="exportJson">Export JSON</button>
+            <button id="importJson">Import JSON</button>
+            <input type="file" id="importFile" style="display:none" accept="application/json">
+        </div>
     </div>
-
-    <!-- Drawing Canvas -->
-    <canvas id="circuitCanvas" width="1000" height="800"></canvas>
-
-    <!-- Run Simulation Button -->
-    <button class="run-simulation" id="runSimulation">Run Simulation</button>
 </div>
 
 <script>
@@ -102,7 +109,59 @@ try {
     const ctx = canvas.getContext('2d');
     let drawingMode = 'select';
     let currentTool = 'select';
-    const components = [];
+    let freehandPath = [];
+const components = [];
+const undoStack = [];
+const redoStack = [];
+
+    canvas.addEventListener('mousemove', e => {
+        document.getElementById('coordinates').textContent = `x:${e.offsetX} y:${e.offsetY}`;
+    });
+
+    document.getElementById('lineTool').addEventListener('click', () => drawingMode = 'line');
+    document.getElementById('circleTool').addEventListener('click', () => drawingMode = 'circle');
+    document.getElementById('freehandTool').addEventListener('click', () => drawingMode = 'freehand');
+    document.getElementById('switchTool').addEventListener('click', () => drawingMode = 'switch');
+    document.getElementById('lampTool').addEventListener('click', () => drawingMode = 'lamp');
+    document.getElementById('andGateTool').addEventListener('click', () => drawingMode = 'andGate');
+    document.getElementById('powerSourceTool').addEventListener('click', () => drawingMode = 'powerSource');
+
+    function saveState() {
+        undoStack.push(JSON.stringify(components));
+        if (undoStack.length > 50) undoStack.shift();
+        redoStack.length = 0;
+    }
+
+    function restoreState(state) {
+        components.length = 0;
+        JSON.parse(state).forEach(saved => {
+            let component;
+            switch (saved.type) {
+                case 'line':
+                    component = new Line(saved.x, saved.y, saved.endX, saved.endY, saved.color, saved.width);
+                    break;
+                case 'circle':
+                    component = new Circle(saved.x, saved.y, saved.radius, saved.color, saved.width);
+                    break;
+                case 'freehand':
+                    component = new Freehand(saved.points, saved.color, saved.width);
+                    break;
+                case 'switch':
+                    component = new Switch(saved.x, saved.y, saved.state);
+                    break;
+                case 'lamp':
+                    component = new Lamp(saved.x, saved.y, saved.on);
+                    break;
+                case 'andGate':
+                    component = new ANDGate(saved.x, saved.y);
+                    break;
+                case 'powerSource':
+                    component = new PowerSource(saved.x, saved.y);
+                    break;
+            }
+            components.push(component);
+        });
+    }
 
     // ... rest of the JavaScript code remains the same, with the above changes applied
 
@@ -111,11 +170,27 @@ try {
     savedComponents.forEach(saved => {
         let component;
         switch (saved.type) {
-            case 'line': component = new Line(saved.x, saved.y, saved.endX, saved.endY); break;
-            case 'switch': component = new Switch(saved.x, saved.y, saved.state); break;
-            case 'lamp': component = new Lamp(saved.x, saved.y, saved.on); break;
-            case 'andGate': component = new ANDGate(saved.x, saved.y); break;
-            case 'powerSource': component = new PowerSource(saved.x, saved.y); break;
+            case 'line':
+                component = new Line(saved.x, saved.y, saved.endX, saved.endY, saved.color, saved.width);
+                break;
+            case 'circle':
+                component = new Circle(saved.x, saved.y, saved.radius, saved.color, saved.width);
+                break;
+            case 'freehand':
+                component = new Freehand(saved.points, saved.color, saved.width);
+                break;
+            case 'switch':
+                component = new Switch(saved.x, saved.y, saved.state);
+                break;
+            case 'lamp':
+                component = new Lamp(saved.x, saved.y, saved.on);
+                break;
+            case 'andGate':
+                component = new ANDGate(saved.x, saved.y);
+                break;
+            case 'powerSource':
+                component = new PowerSource(saved.x, saved.y);
+                break;
         }
         components.push(component);
     });
@@ -146,56 +221,22 @@ try {
 
     // Component classes with input/output connections
     class Line {
-        constructor(x, y, endX = x, endY = y) {
+        constructor(x, y, endX = x, endY = y, color = '#000', width = 2) {
             this.x = x;
             this.y = y;
             this.endX = endX;
             this.endY = endY;
+            this.color = color;
+            this.width = width;
             this.type = 'line';
         }
 
         draw() {
-            ctx.strokeStyle = 'black';
-            ctx.lineWidth = 4;
+            ctx.strokeStyle = this.color;
+            ctx.lineWidth = this.width;
             ctx.beginPath();
             ctx.moveTo(this.x, this.y);
             ctx.lineTo(this.endX, this.endY);
-            ctx.stroke();
-        }
-
-        setEnd(x, y) {
-            if (Math.abs(this.x - x) < Math.abs(this.y - y)) {
-                this.endX = this.x; // vertical line
-                this.endY = y;
-            } else {
-                this.endX = x; // horizontal line
-                this.endY = this.y;
-            }
-        }
-
-        isClicked(x, y) {
-            // Check if click is near the line for erasing
-            return Math.abs(this.x - x) < 10 && Math.abs(this.y - y) < 10 || Math.abs(this.endX - x) < 10 && Math.abs(this.endY - y) < 10;
-        }
-    }
-
-    class Switch {
-        constructor(x, y, state = false) {
-            this.x = x;
-            this.y = y;
-            this.type = 'switch';
-            this.state = state;
-        }
-
-        draw() {
-            ctx.fillStyle = this.state ? 'green' : 'red';
-            ctx.fillRect(this.x - 10, this.y - 10, 20, 20);
-            ctx.strokeText('SW', this.x - 15, this.y - 20);
-            ctx.strokeStyle = 'black';
-            // Draw connection points
-            ctx.beginPath();
-            ctx.arc(this.x - 20, this.y, 5, 0, Math.PI * 2); // input
-            ctx.arc(this.x + 20, this.y, 5, 0, Math.PI * 2); // output
             ctx.stroke();
         }
 
@@ -270,6 +311,54 @@ try {
         }
     }
 
+    class Circle {
+        constructor(x, y, radius = 20, color = '#000', width = 2) {
+            this.x = x;
+            this.y = y;
+            this.radius = radius;
+            this.color = color;
+            this.width = width;
+            this.type = 'circle';
+        }
+
+        draw() {
+            ctx.strokeStyle = this.color;
+            ctx.lineWidth = this.width;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        isClicked(x, y) {
+            return Math.hypot(this.x - x, this.y - y) <= this.radius + 5;
+        }
+    }
+
+    class Freehand {
+        constructor(points = [], color = '#000', width = 2) {
+            this.points = points;
+            this.color = color;
+            this.width = width;
+            this.type = 'freehand';
+        }
+
+        draw() {
+            if (this.points.length < 2) return;
+            ctx.strokeStyle = this.color;
+            ctx.lineWidth = this.width;
+            ctx.beginPath();
+            ctx.moveTo(this.points[0].x, this.points[0].y);
+            for (let i = 1; i < this.points.length; i++) {
+                ctx.lineTo(this.points[i].x, this.points[i].y);
+            }
+            ctx.stroke();
+        }
+
+        isClicked(x, y) {
+            return false;
+        }
+    }
+
     class ANDGate {
         constructor(x, y) {
             this.x = x;
@@ -335,6 +424,7 @@ try {
         if (currentTool === 'eraser') {
             const index = components.findIndex(comp => comp.isClicked(x, y));
             if (index > -1) {
+                saveState();
                 components.splice(index, 1);
                 saveComponents();
                 drawComponents();
@@ -343,11 +433,22 @@ try {
         }
 
         let component;
+        const color = document.getElementById('lineColor').value;
+        const width = parseInt(document.getElementById('lineWidth').value,10);
         switch (drawingMode) {
             case 'line':
-                component = new Line(x, y);
+                component = new Line(x, y, x, y, color, width);
                 canvas.addEventListener('mousemove', mouseMoveHandler);
                 canvas.addEventListener('mouseup', mouseUpHandler);
+                break;
+            case 'circle':
+                component = new Circle(x, y, 20, color, width);
+                break;
+            case 'freehand':
+                freehandPath = [{x,y}];
+                component = new Freehand(freehandPath, color, width);
+                canvas.addEventListener('mousemove', freehandMove);
+                canvas.addEventListener('mouseup', freehandUp);
                 break;
             case 'switch':
                 component = new Switch(x, y);
@@ -365,6 +466,7 @@ try {
                 // Toggle switch if clicked on
                 const clickedSwitch = components.find(comp => comp.type === 'switch' && comp.isClicked(x, y));
                 if (clickedSwitch) {
+                    saveState();
                     clickedSwitch.toggle();
                     drawComponents();
                     saveComponents();
@@ -376,6 +478,7 @@ try {
         if (component) {
             // Snap component to nearest connection point if possible
             snapToClosestConnection(component);
+            saveState();
             components.push(component);
             saveComponents();
             drawComponents();
@@ -402,7 +505,7 @@ try {
     }
 
     // Handle line drawing
-    function mouseMoveHandler(e) {
+function mouseMoveHandler(e) {
         const lastComponent = components[components.length - 1];
         if (lastComponent && lastComponent.type === 'line') {
             const x = Math.round(e.offsetX / 40) * 40;
@@ -410,7 +513,24 @@ try {
             lastComponent.setEnd(x, y);
             snapToClosestConnection(lastComponent); // Snap line end to nearest component
             drawComponents();
+}
+
+    function freehandMove(e) {
+        const x = e.offsetX;
+        const y = e.offsetY;
+        const lastComponent = components[components.length - 1];
+        if (lastComponent && lastComponent.type === 'freehand') {
+            lastComponent.points.push({x,y});
+            drawComponents();
         }
+    }
+
+    function freehandUp() {
+        canvas.removeEventListener('mousemove', freehandMove);
+        canvas.removeEventListener('mouseup', freehandUp);
+        saveComponents();
+        drawComponents();
+    }
     }
 
     function mouseUpHandler() {
@@ -420,18 +540,113 @@ try {
         drawComponents();
     }
 
-    // Run circuit simulation
+    // Run circuit simulation using a simple graph search
     document.getElementById('runSimulation').addEventListener('click', () => {
-        // Basic simulation logic
         const powerSource = components.find(comp => comp.type === 'powerSource');
         const lamp = components.find(comp => comp.type === 'lamp');
-        if (powerSource && lamp) {
-            // Simplified: Check if there's a path between power source and lamp
-            const connected = components.some(comp => comp.type === 'line' && comp.x === powerSource.x && comp.endX === lamp.x);
-            lamp.on = connected;
+        if (!powerSource || !lamp) {
+            alert('Power source or lamp missing.');
+            return;
         }
+
+        const graph = {};
+        const addEdge = (a, b) => {
+            const k1 = `${a.x},${a.y}`;
+            const k2 = `${b.x},${b.y}`;
+            graph[k1] = graph[k1] || [];
+            graph[k2] = graph[k2] || [];
+            graph[k1].push(k2);
+            graph[k2].push(k1);
+        };
+
+        components.forEach(comp => {
+            if (comp.type === 'line') {
+                addEdge({x: comp.x, y: comp.y}, {x: comp.endX, y: comp.endY});
+            } else if (comp.type === 'switch' && comp.state) {
+                addEdge({x: comp.x - 20, y: comp.y}, {x: comp.x + 20, y: comp.y});
+            } else if (comp.type === 'andGate') {
+                addEdge({x: comp.x - 30, y: comp.y}, {x: comp.x + 30, y: comp.y});
+            }
+        });
+
+        const start = {x: powerSource.x - 25, y: powerSource.y};
+        const goal = {x: lamp.x - 20, y: lamp.y};
+        const queue = [`${start.x},${start.y}`];
+        const visited = new Set(queue);
+        let found = false;
+
+        while (queue.length > 0) {
+            const node = queue.shift();
+            if (node === `${goal.x},${goal.y}`) {
+                found = true;
+                break;
+            }
+            (graph[node] || []).forEach(next => {
+                if (!visited.has(next)) {
+                    visited.add(next);
+                    queue.push(next);
+                }
+            });
+        }
+
+        lamp.on = found;
         drawComponents();
-        alert(lamp && lamp.on ? 'Circuit is working!' : 'Incomplete circuit. Check connections.');
+        alert(lamp.on ? 'Circuit is working!' : 'Incomplete circuit. Check connections.');
+    });
+
+    document.getElementById('undoBtn').addEventListener('click', () => {
+        if (undoStack.length > 0) {
+            redoStack.push(JSON.stringify(components));
+            const state = undoStack.pop();
+            restoreState(state);
+            drawComponents();
+            saveComponents();
+        }
+    });
+
+    document.getElementById('redoBtn').addEventListener('click', () => {
+        if (redoStack.length > 0) {
+            undoStack.push(JSON.stringify(components));
+            const state = redoStack.pop();
+            restoreState(state);
+            drawComponents();
+            saveComponents();
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.ctrlKey && e.key.toLowerCase() === 'z') {
+            document.getElementById('undoBtn').click();
+        } else if (e.ctrlKey && e.key.toLowerCase() === 'y') {
+            document.getElementById('redoBtn').click();
+        }
+    });
+
+    document.getElementById('exportJson').addEventListener('click', () => {
+        const blob = new Blob([JSON.stringify(components)], {type: 'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'circuit.json';
+        a.click();
+        URL.revokeObjectURL(url);
+    });
+
+    document.getElementById('importJson').addEventListener('click', () => {
+        document.getElementById('importFile').click();
+    });
+
+    document.getElementById('importFile').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+            saveState();
+            restoreState(reader.result);
+            drawComponents();
+            saveComponents();
+        };
+        reader.readAsText(file);
     });
 
     // Initial draw of the grid and components

@@ -1,5 +1,8 @@
 <?php
+session_start();
 require 'config.php';
+require 'csrf.php';
+csrf_verify();
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $username = $_POST['username'];
@@ -12,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $user = $result->fetch_assoc();
 
     if ($user && password_verify($password, $user['password'])) {
-        session_start();
+        session_regenerate_id(true);
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['username'] = $user['username'];
         $_SESSION['role'] = $user['role']; // Sicherstellen, dass die Rolle gesetzt wird
@@ -23,7 +26,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 }
 ?>
 <form method="POST" action="login.php">
+    <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
     <input type="text" name="username" placeholder="Username" required>
     <input type="password" name="password" placeholder="Password" required>
     <button type="submit">Login</button>
 </form>
+<div class="texthead">
+    <a href="impressum.php">Impressum</a> |
+    <a href="datenschutz.php">Datenschutz</a>
+</div>
+<script>
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js').catch(() => {});
+}
+</script>
+<script src="cookie.js"></script>

@@ -17,6 +17,11 @@ $image_data = str_replace(' ', '+', $image_data);
 $data = base64_decode($image_data);
 
 if ($design_id) {
+    // Save previous state in design_versions table
+    $prev = $conn->prepare("INSERT INTO design_versions (design_id, image_data) SELECT id, image_data FROM designs WHERE id = ?");
+    $prev->bind_param("i", $design_id);
+    $prev->execute();
+
     // Update existing design
     $stmt = $conn->prepare("UPDATE designs SET image_data = ? WHERE id = ?");
     $stmt->bind_param("si", $data, $design_id);
