@@ -1,0 +1,25 @@
+/* Drawing-specific styles */
+.toolbox {
+    margin-bottom: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.toolbox button,
+.toolbox select,
+.toolbox input[type="color"],
+.toolbox input[type="number"] {
+    margin-right: 5px;
+}
+
+#coordinates {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+}
