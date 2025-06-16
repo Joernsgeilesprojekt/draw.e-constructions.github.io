@@ -20,6 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 ?>
+?>
 <form method="POST" action="register.php">
     <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
     <input type="text" name="username" placeholder="Username" required>

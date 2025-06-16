@@ -24,7 +24,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         echo "Invalid username or password.";
     }
 }
-?>
 <form method="POST" action="login.php">
     <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
     <input type="text" name="username" placeholder="Username" required>
