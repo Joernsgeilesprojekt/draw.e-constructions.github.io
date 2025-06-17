@@ -1,29 +1,43 @@
-window.onload = function() {
+document.addEventListener('DOMContentLoaded', () => {
     const canvas = document.getElementById('circuitCanvas');
+    if (!canvas) return;
     const ctx = canvas.getContext('2d');
     let drawing = false;
 
-    canvas.addEventListener('mousedown', function(e) {
+    const colorPicker = document.getElementById('colorPicker');
+    const widthInput = document.getElementById('lineWidth');
+    const clearButton = document.getElementById('clearCanvas');
+
+    const getColor = () => (colorPicker ? colorPicker.value : '#000000');
+    const getWidth = () => (widthInput ? parseInt(widthInput.value, 10) || 1 : 1);
+
+    canvas.addEventListener('mousedown', (e) => {
         drawing = true;
         ctx.beginPath();
         ctx.moveTo(e.offsetX, e.offsetY);
     });
 
-    canvas.addEventListener('mousemove', function(e) {
-        if (drawing) {
-            ctx.lineTo(e.offsetX, e.offsetY);
-            ctx.stroke();
-        }
+    canvas.addEventListener('mousemove', (e) => {
+        if (!drawing) return;
+        ctx.strokeStyle = getColor();
+        ctx.lineWidth = getWidth();
+        ctx.lineTo(e.offsetX, e.offsetY);
+        ctx.stroke();
     });
 
-    canvas.addEventListener('mouseup', function() {
+    const stopDrawing = () => {
         drawing = false;
-    });
+    };
 
-    canvas.addEventListener('mouseout', function() {
-        drawing = false;
-    });
-}
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseleave', stopDrawing);
+
+    if (clearButton) {
+        clearButton.addEventListener('click', () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        });
+    }
+});
 
 function saveCanvas() {
     const canvas = document.getElementById('circuitCanvas');
